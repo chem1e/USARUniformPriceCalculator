@@ -14,7 +14,6 @@
     </header>
 
     <main class="main">
-      <!-- Uniform Selection -->
       <section class="section">
         <div class="section-header">
           <span class="section-number">01</span>
@@ -43,7 +42,6 @@
         </div>
       </section>
 
-      <!-- Watch (only if allowed) -->
       <section v-if="currentUniform && currentUniform.allowsWatch" class="section">
         <div class="section-header">
           <span class="section-number">02</span>
@@ -56,65 +54,55 @@
         </div>
       </section>
 
-      <!-- Awards Section -->
-      <section v-if="currentUniform && currentUniform.items" class="section">
+      <section v-if="currentUniform && currentUniform.sections" class="section">
         <div class="section-header">
           <span class="section-number">{{ currentUniform.allowsWatch ? '03' : '02' }}</span>
           <h2>Awards</h2>
           <span class="section-meta">R$3.00 each (unless noted)</span>
         </div>
 
-        <!-- Live Limits Display -->
         <div class="limits-info">
-          <h4>📋 Current Limits & Selections</h4>
+          <h4>Current Limits & Selections</h4>
           <ul>
-            <li v-if="limits.skillTabMax">
-              🔖 Skill Tabs: <strong>{{ skillTabCount }}</strong> / {{ limits.skillTabMax }}
+            <li v-if="limits.group1to3Max !== undefined">
+              Groups 1‑3 (Combat/Expert/Aviation): {{ group1to3Count }} / {{ limits.group1to3Max }}
             </li>
-            <li v-if="limits.skillBadgeMax">
-              🎖️ Skill Badges: <strong>{{ skillBadgeCount }}</strong> / {{ limits.skillBadgeMax }}
+            <li v-if="limits.skillBadgeMax !== undefined">
+              Other Skill Badges (Group 4+): {{ skillBadgeCount }} / {{ limits.skillBadgeMax }}
             </li>
-            <li v-if="limits.ribbonMax">
-              🎗️ Ribbons: <strong>{{ ribbonCount }}</strong> / {{ limits.ribbonMax }}
+            <li v-if="limits.skillTabMax !== undefined">
+              Skill Tabs: {{ skillTabCount }} / {{ limits.skillTabMax }}
             </li>
-            <li v-if="limits.idBadgeMax">
-              🆔 ID Badges: <strong>{{ idBadgeCount }}</strong> / {{ limits.idBadgeMax }}
+            <li v-if="limits.ribbonMax !== undefined">
+              Ribbons: {{ ribbonCount }} / {{ limits.ribbonMax }}
             </li>
-            <li v-if="limits.foreignMax">
-              🌍 Foreign Awards: <strong>{{ foreignCount }}</strong> / {{ limits.foreignMax }}
+            <li v-if="limits.idBadgeMax !== undefined">
+              ID Badges: {{ idBadgeCount }} / {{ limits.idBadgeMax }}
             </li>
-            <li v-if="limits.group1Max">
-              🔴 Group 1: <strong>{{ group1Count }}</strong> / {{ limits.group1Max }}
-            </li>
-            <li v-if="limits.group2Max">
-              🟠 Group 2: <strong>{{ group2Count }}</strong> / {{ limits.group2Max }}
-            </li>
-            <li v-if="limits.group3Max">
-              🔵 Group 3: <strong>{{ group3Count }}</strong> / {{ limits.group3Max }}
-            </li>
-            <li v-if="limits.groups1to3Max">
-              🟣 Groups 1-3 Total: <strong>{{ groups1to3Count }}</strong> /
-              {{ limits.groups1to3Max }}
+            <li v-if="limits.foreignMax !== undefined">
+              Foreign Awards: {{ foreignCount }} / {{ limits.foreignMax }}
             </li>
             <li v-if="limits.prohibitedGroups && limits.prohibitedGroups.length">
-              ⛔ Prohibited: {{ limits.prohibitedGroups.join(', ') }}
+              Prohibited: {{ limits.prohibitedGroups.join(', ') }}
             </li>
           </ul>
         </div>
 
-        <!-- Award Grid -->
-        <div class="badge-grid">
-          <div
-            v-for="award in currentUniform.items"
-            :key="award.key"
-            class="badge-item"
-            :class="{ selected: isSelected(award), free: award.price === 0 }"
-            @click="toggleAward(award)"
-          >
-            <span class="badge-check">{{ isSelected(award) ? '✓' : '' }}</span>
-            <span class="badge-name">{{ award.name }}</span>
-            <span class="badge-cost" v-if="award.price > 0">R${{ award.price }}</span>
-            <span class="badge-cost free-text" v-else>FREE</span>
+        <div v-for="(section, idx) in currentUniform.sections" :key="idx" class="badge-group">
+          <h3 class="badge-group-title">{{ section.title }}</h3>
+          <div class="badge-grid">
+            <div
+              v-for="award in section.items"
+              :key="award.key"
+              class="badge-item"
+              :class="{ selected: isSelected(award), free: award.price === 0 }"
+              @click="toggleAward(award)"
+            >
+              <span class="badge-check">{{ isSelected(award) ? '✓' : '' }}</span>
+              <span class="badge-name">{{ award.name }}</span>
+              <span class="badge-cost" v-if="award.price > 0">R${{ award.price }}</span>
+              <span class="badge-cost free-text" v-else>FREE</span>
+            </div>
           </div>
         </div>
 
@@ -152,7 +140,7 @@
 </template>
 
 <script>
-// ======================= DATA (embedded, no external file) =======================
+// ======================= DATA =======================
 const uniformOptions = [
   { value: 'ocp', label: 'OCP', price: 40 },
   { value: 'rolledOcp', label: 'Rolled OCP', price: 40 },
@@ -162,154 +150,292 @@ const uniformOptions = [
   { value: 'classBShort', label: "Class B's (Short Sleeve)", price: 35 },
   { value: 'classC', label: "Class C's", price: 30 },
   { value: 'classCShort', label: "Class C's (Short Sleeve)", price: 30 },
-  { value: 'tigerstripes', label: 'Tigerstripes', price: 50 },
-  { value: 'tigerstripesShort', label: 'Tigerstripes (Short Sleeve)', price: 50 },
+  { value: 'tigerstripes', label: 'Tiger Stripes', price: 50 },
+  { value: 'tigerstripesShort', label: 'Tiger Stripes (Short Sleeve)', price: 50 },
   { value: 'acs', label: 'ACS', price: 45 },
   { value: 'acsShort', label: 'ACS (Short Sleeve)', price: 45 },
+  { value: 'blackouts', label: 'Blackouts', price: 40 },
+  { value: 'customPt', label: 'Custom PT', price: 25 },
+  { value: 'fleece', label: 'Fleece (Winter)', price: 60 },
+  { value: 'sweater', label: 'Sweater (Winter)', price: 50 },
 ]
 
-// Basic items
-const divisionalPatch = { key: 'divisionalPatch', name: 'Divisional Patch', price: 5 }
-const rankTab = { key: 'rankTab', name: 'Rank Tab', price: 3 }
-const nametape = { key: 'nametape', name: 'Nametape', price: 3 }
-const csib = { key: 'csib', name: 'CSIB', price: 3, type: 'skillBadge', ignoreLimit: true }
+// Basic items (nametape removed)
+const csib = {
+  key: 'csib',
+  name: 'Combat Service Identification Badge (CSIB)',
+  price: 3,
+  type: 'skillBadge',
+  ignoreLimit: true,
+}
 const overseasBar = { key: 'overseasBar', name: 'Overseas Bar', price: 3 }
 const serviceStripe = { key: 'serviceStripe', name: 'Service Stripe', price: 3 }
+const rdi = { key: 'rdi', name: 'Regimental Distinctive Insignia', price: 3 }
+const unitCitation = { key: 'unitCitation', name: 'Unit Citation', price: 3 }
+const shoulderRank = { key: 'shoulderRank', name: 'Shoulderloop Rank Tab', price: 3 }
 
-// Group 1 (Combat)
-const group1 = [
-  { key: 'cib', name: 'CIB', price: 3, type: 'skillBadge', group: 'group1' },
-  { key: 'cmb', name: 'CMB', price: 3, type: 'skillBadge', group: 'group1' },
-  { key: 'cab', name: 'CAB', price: 3, type: 'skillBadge', group: 'group1' },
+// --- Award groups ---
+// Groups 1-3 (combined limit of 1)
+const combatBadges = {
+  title: 'Combat Badges (Group 1)',
+  items: [
+    { key: 'cib', name: 'Combat Infantryman Badge', price: 3, type: 'group123', group: 'group1' },
+    { key: 'cmb', name: 'Combat Medical Badge', price: 3, type: 'group123', group: 'group1' },
+    { key: 'cab', name: 'Combat Action Badge', price: 3, type: 'group123', group: 'group1' },
+  ],
+}
+
+const expertBadges = {
+  title: 'Expert Badges (Group 2)',
+  items: [
+    { key: 'eib', name: 'Expert Infantryman Badge', price: 3, type: 'group123', group: 'group2' },
+    {
+      key: 'efmb',
+      name: 'Expert Field Medical Badge',
+      price: 3,
+      type: 'group123',
+      group: 'group2',
+    },
+    { key: 'esb', name: 'Expert Soldier Badge', price: 3, type: 'group123', group: 'group2' },
+  ],
+}
+
+const aviationBadges = {
+  title: 'Aviation & Space Badges (Group 3)',
+  items: [
+    { key: 'aviator', name: 'Aviator Badge', price: 3, type: 'group123', group: 'group3' },
+    {
+      key: 'flightSurgeon',
+      name: 'Flight Surgeon Badge',
+      price: 3,
+      type: 'group123',
+      group: 'group3',
+    },
+    { key: 'aviation', name: 'Aviation Badge', price: 3, type: 'group123', group: 'group3' },
+    {
+      key: 'astronaut',
+      name: 'Army Astronaut Device',
+      price: 3,
+      type: 'group123',
+      group: 'group3',
+    },
+    {
+      key: 'eod',
+      name: 'Explosive Ordnance Disposal Badge',
+      price: 3,
+      type: 'group123',
+      group: 'group3',
+    },
+    {
+      key: 'spaceOps',
+      name: 'Space Operations Badge',
+      price: 3,
+      type: 'group123',
+      group: 'group3',
+    },
+  ],
+}
+
+// Group 4 – count as ordinary skill badges
+const airBadges = {
+  title: 'Air & Special Operations Badges (Group 4)',
+  items: [
+    { key: 'parachutist', name: 'Army Parachutist Badge', price: 3, type: 'skillBadge' },
+    { key: 'pathfinder', name: 'Army Pathfinder Badge', price: 3, type: 'skillBadge' },
+    { key: 'airAssault', name: 'Army Air Assault Badge', price: 3, type: 'skillBadge' },
+    { key: 'freefall', name: 'Military Freefall Badge', price: 3, type: 'skillBadge' },
+    { key: 'mountaineering', name: 'Mountaineering Badge', price: 3, type: 'skillBadge' },
+    {
+      key: 'specialOpsDiver',
+      name: 'Special Operations Diver Badge',
+      price: 3,
+      type: 'skillBadge',
+    },
+  ],
+}
+
+// Identification badges – NOT skill badges
+const idBadgesGroup = {
+  title: 'Identification Badges (Group 5)',
+  items: [
+    {
+      key: 'drillSgt',
+      name: 'Drill Sergeant Identification Badge',
+      price: 3,
+      type: 'idBadge',
+      group: 'group5',
+    },
+    {
+      key: 'instructor',
+      name: 'Army Instructor Identification Badge',
+      price: 3,
+      type: 'idBadge',
+      group: 'group5',
+    },
+    {
+      key: 'masterGunner',
+      name: 'Master Gunner Identification Badge',
+      price: 3,
+      type: 'idBadge',
+      group: 'group5',
+    },
+    { key: 'recruiter', name: 'Recruiter Badge', price: 3, type: 'idBadge', group: 'group5' },
+    {
+      key: 'armyStaff',
+      name: 'Army Staff Identification Badge',
+      price: 3,
+      type: 'idBadge',
+      group: 'group5',
+    },
+    {
+      key: 'jcsStaff',
+      name: 'Joint Chiefs of Staff Identification Badge',
+      price: 3,
+      type: 'idBadge',
+      group: 'group5',
+    },
+  ],
+}
+
+const skillTabsGroup = {
+  title: 'Skill Tabs',
+  items: [
+    { key: 'presidentsHundred', name: "President's Hundred Tab", price: 3, type: 'skillTab' },
+    { key: 'specialForces', name: 'Special Forces Tab', price: 3, type: 'skillTab' },
+    { key: 'ranger', name: 'Ranger Tab', price: 3, type: 'skillTab' },
+    { key: 'sapper', name: 'Sapper Tab', price: 3, type: 'skillTab' },
+    { key: 'jungle', name: 'Jungle Tab', price: 3, type: 'skillTab' },
+    { key: 'arctic', name: 'Arctic Tab', price: 3, type: 'skillTab' },
+  ],
+}
+
+const foreignGroup = {
+  title: 'Foreign Devices',
+  items: [
+    { key: 'rokJump', name: 'Republic of Korea Jump Wings', price: 3, type: 'foreign' },
+    { key: 'rafParachute', name: 'Royal Air Force Parachute Wings', price: 3, type: 'foreign' },
+    { key: 'rafAviator', name: 'Royal Air Force Aviator Wings', price: 3, type: 'foreign' },
+    {
+      key: 'philippinesAirborne',
+      name: 'Armed Forces of the Philippines Airborne Badge',
+      price: 3,
+      type: 'foreign',
+    },
+    { key: 'queensDedication', name: "Queen's Dedication Medal", price: 3, type: 'foreign' },
+    { key: 'combatReadiness', name: 'Combat Readiness Medal', price: 3, type: 'foreign' },
+    { key: 'turkishMarksmanship', name: 'Turkish Marksmanship Medal', price: 3, type: 'foreign' },
+  ],
+}
+
+const ribbonsGroup = {
+  title: 'Ribbons',
+  items: [
+    { key: 'dsc', name: 'Army Distinguished Service Cross', price: 3, type: 'ribbon' },
+    { key: 'silverStar', name: 'Silver Star', price: 3, type: 'ribbon' },
+    { key: 'ndsm', name: 'National Defense Service Medal', price: 0, type: 'ribbon' },
+  ],
+}
+
+// --- Uniform sections (nametape removed everywhere) ---
+const ocpSections = [
+  { title: 'Uniform Items', items: [csib] },
+  combatBadges,
+  expertBadges,
+  aviationBadges,
+  airBadges,
+  {
+    title: 'Identification Badges (Limited to 2, specific types)',
+    items: idBadgesGroup.items.filter((b) =>
+      ['drillSgt', 'instructor', 'recruiter', 'masterGunner'].includes(b.key),
+    ),
+  },
+  skillTabsGroup,
+  { title: 'Foreign Devices (Max 1)', items: foreignGroup.items },
 ]
 
-// Group 2 (Expert)
-const group2 = [
-  { key: 'eib', name: 'EIB', price: 3, type: 'skillBadge', group: 'group2' },
-  { key: 'efmb', name: 'EFMB', price: 3, type: 'skillBadge', group: 'group2' },
-  { key: 'esb', name: 'ESB', price: 3, type: 'skillBadge', group: 'group2' },
+const rolledOcpSections = [
+  { title: 'Uniform Items', items: [csib] },
+  combatBadges,
+  expertBadges,
+  aviationBadges,
+  airBadges,
+  {
+    title: 'Identification Badges (Limited to 2, specific types)',
+    items: idBadgesGroup.items.filter((b) =>
+      ['drillSgt', 'instructor', 'recruiter', 'masterGunner'].includes(b.key),
+    ),
+  },
+  skillTabsGroup,
+  { title: 'Foreign Devices (Max 1)', items: foreignGroup.items },
 ]
 
-// Group 3 (Aviation & Space)
-const group3 = [
-  { key: 'aviator', name: 'Aviator', price: 3, type: 'skillBadge', group: 'group3' },
-  { key: 'flightSurgeon', name: 'Flight Surgeon', price: 3, type: 'skillBadge', group: 'group3' },
-  { key: 'aviation', name: 'Aviation', price: 3, type: 'skillBadge', group: 'group3' },
-  { key: 'astronaut', name: 'Astronaut', price: 3, type: 'skillBadge', group: 'group3' },
-  { key: 'eod', name: 'EOD', price: 3, type: 'skillBadge', group: 'group3' },
-  { key: 'spaceOps', name: 'Space Ops', price: 3, type: 'skillBadge', group: 'group3' },
+const acsSections = [{ title: 'Uniform Items', items: [csib] }, skillTabsGroup]
+
+const blackoutsSections = [{ title: 'Uniform Items', items: [csib] }, skillTabsGroup]
+
+const customPtSections = [
+  { title: 'Uniform Items', items: [] }, // no items
 ]
 
-// Group 4 (Air & Special Ops) – no group limit
-const group4 = [
-  { key: 'parachutist', name: 'Parachutist', price: 3, type: 'skillBadge' },
-  { key: 'pathfinder', name: 'Pathfinder', price: 3, type: 'skillBadge' },
-  { key: 'airAssault', name: 'Air Assault', price: 3, type: 'skillBadge' },
-  { key: 'freefall', name: 'Freefall', price: 3, type: 'skillBadge' },
-  { key: 'mountaineering', name: 'Mountaineering', price: 3, type: 'skillBadge' },
-  { key: 'specialOpsDiver', name: 'Spec Ops Diver', price: 3, type: 'skillBadge' },
+const fleeceSections = [
+  { title: 'Uniform Items', items: [] }, // no items
 ]
 
-// Identification Badges (Group 5)
-const idBadges = [
-  { key: 'drillSgt', name: 'Drill Sgt', price: 3, type: 'idBadge', group: 'group5' },
-  { key: 'instructor', name: 'Instructor', price: 3, type: 'idBadge', group: 'group5' },
-  { key: 'masterGunner', name: 'Master Gunner', price: 3, type: 'idBadge', group: 'group5' },
-  { key: 'recruiter', name: 'Recruiter', price: 3, type: 'idBadge', group: 'group5' },
-  { key: 'armyStaff', name: 'Army Staff', price: 3, type: 'idBadge', group: 'group5' },
-  { key: 'jcsStaff', name: 'JCS Staff', price: 3, type: 'idBadge', group: 'group5' },
+const tigerSections = [
+  { title: 'Uniform Items', items: [] },
+  combatBadges,
+  {
+    title: 'Skill Tabs (Max 2)',
+    items: skillTabsGroup.items.filter(
+      (t) => !['presidentsHundred', 'jungle', 'arctic'].includes(t.key),
+    ),
+  },
 ]
 
-// Skill Tabs
-const skillTabs = [
-  { key: 'presidentsHundred', name: "President's Hundred", price: 3, type: 'skillTab' },
-  { key: 'specialForces', name: 'Special Forces', price: 3, type: 'skillTab' },
-  { key: 'ranger', name: 'Ranger', price: 3, type: 'skillTab' },
-  { key: 'sapper', name: 'Sapper', price: 3, type: 'skillTab' },
-  { key: 'jungle', name: 'Jungle', price: 3, type: 'skillTab' },
-  { key: 'arctic', name: 'Arctic', price: 3, type: 'skillTab' },
+const agsuSections = [
+  { title: 'Uniform Items', items: [csib, overseasBar, serviceStripe] },
+  ribbonsGroup,
+  combatBadges,
+  expertBadges,
+  aviationBadges,
+  airBadges,
+  { title: 'Identification Badges (Max 2, expanded list)', items: idBadgesGroup.items },
+  skillTabsGroup,
+  {
+    title: 'Foreign Devices (ROKA Jump Wings only)',
+    items: foreignGroup.items.filter((f) => f.key === 'rokJump'),
+  },
 ]
 
-// Foreign Devices
-const foreign = [
-  { key: 'rokJump', name: 'ROK Jump Wings', price: 3, type: 'foreign' },
-  { key: 'rafParachute', name: 'RAF Parachute', price: 3, type: 'foreign' },
-  { key: 'rafAviator', name: 'RAF Aviator', price: 3, type: 'foreign' },
-  { key: 'philippinesAirborne', name: 'Philippines Airborne', price: 3, type: 'foreign' },
-  { key: 'queensDedication', name: "Queen's Dedication", price: 3, type: 'foreign' },
-  { key: 'combatReadiness', name: 'Combat Readiness', price: 3, type: 'foreign' },
-  { key: 'turkishMarksmanship', name: 'Turkish Marksmanship', price: 3, type: 'foreign' },
+const classBSections = [
+  { title: 'Regimental Distinctive Insignia', items: [rdi] },
+  { title: 'Ribbons (Max 6)', items: ribbonsGroup.items },
+  {
+    title: 'Skill Badges & Tabs (Metal Replica, Max 1 total)',
+    items: [
+      ...combatBadges.items,
+      ...expertBadges.items,
+      ...aviationBadges.items,
+      ...airBadges.items,
+      ...skillTabsGroup.items,
+    ],
+  },
 ]
 
-// Ribbons (simplified for demo; add full list as needed)
-const ribbons = [
-  { key: 'dsc', name: 'DSC', price: 3, type: 'ribbon' },
-  { key: 'silverStar', name: 'Silver Star', price: 3, type: 'ribbon' },
-  { key: 'ndsm', name: 'NDSM', price: 0, type: 'ribbon' },
-]
+const sweaterSections = [{ title: 'Shoulderloop Rank Tabs', items: [shoulderRank] }]
 
-// ----- Flat item arrays for each uniform -----
-const ocpItems = [
-  divisionalPatch,
-  rankTab,
-  nametape,
-  csib,
-  ...group1,
-  ...group2,
-  ...group3,
-  ...group4,
-  ...idBadges,
-  ...skillTabs,
-  ...foreign,
+const classCSections = [
+  { title: 'Regimental Distinctive Insignia', items: [rdi] },
+  { title: 'Unit Citations', items: [unitCitation] },
+  ribbonsGroup,
+  skillTabsGroup,
+  { title: 'Identification Badges (Only if no CSIB)', items: idBadgesGroup.items },
+  combatBadges,
+  expertBadges,
+  aviationBadges,
+  { title: 'CSIB', items: [csib] },
+  foreignGroup,
 ]
-
-const agsuItems = [
-  divisionalPatch,
-  csib,
-  overseasBar,
-  serviceStripe,
-  ...ribbons,
-  ...group1,
-  ...group2,
-  ...group3,
-  ...group4,
-  ...idBadges,
-  ...skillTabs,
-  ...foreign,
-]
-
-const classBItems = [
-  { key: 'rdi', name: 'Regimental Distinctive Insignia', price: 3 },
-  ...ribbons,
-  ...group1,
-  ...group2,
-  ...group3,
-  ...group4,
-  ...skillTabs,
-]
-
-const classCItems = [
-  { key: 'rdi', name: 'Regimental Distinctive Insignia', price: 3 },
-  { key: 'unitCitation', name: 'Unit Citation', price: 3 },
-  ...ribbons,
-  ...skillTabs,
-  ...idBadges,
-  ...group1,
-  ...group2,
-  ...group3,
-  csib,
-  nametape,
-  ...foreign,
-]
-
-const tigerItems = [
-  divisionalPatch,
-  nametape,
-  ...group1,
-  ...skillTabs.filter((t) => !['presidentsHundred', 'jungle', 'arctic'].includes(t.key)),
-]
-
-const acsItems = [divisionalPatch, csib, ...skillTabs]
 
 // ----- Uniform configurations with limits -----
 const uniformAwards = {
@@ -317,135 +443,149 @@ const uniformAwards = {
     title: 'Standard OCP',
     allowsWatch: false,
     limits: {
+      group1to3Max: 1,
       skillBadgeMax: 4,
       skillTabMax: 2,
       foreignMax: 1,
       idBadgeMax: 2,
       allowedIdBadges: ['drillSgt', 'instructor', 'recruiter', 'masterGunner'],
-      group1Max: 1,
-      group2Max: 1,
-      group3Max: 1,
       prohibitedGroups: ['group5'],
     },
-    items: ocpItems,
+    sections: ocpSections,
   },
   rolledOcp: {
     title: 'Rolled OCP',
     allowsWatch: true,
     limits: {
+      group1to3Max: 1,
       skillBadgeMax: 2,
       skillTabMax: 2,
       foreignMax: 1,
       idBadgeMax: 2,
       allowedIdBadges: ['drillSgt', 'instructor', 'recruiter', 'masterGunner'],
-      groups1to3Max: 1,
       prohibitedGroups: ['group5'],
     },
-    items: ocpItems,
-  },
-  agsu: {
-    title: 'AGSU',
-    allowsWatch: false,
-    limits: {
-      skillBadgeMax: 4,
-      skillTabMax: 2,
-      idBadgeMax: 2,
-      allowedIdBadges: [
-        'drillSgt',
-        'instructor',
-        'masterGunner',
-        'recruiter',
-        'armyStaff',
-        'jcsStaff',
-      ],
-      group1Max: 1,
-      group2Max: 1,
-      group3Max: 1,
-    },
-    items: agsuItems,
-  },
-  agsuShort: {
-    title: 'AGSU (Short Sleeve)',
-    allowsWatch: true,
-    limits: {
-      skillBadgeMax: 4,
-      skillTabMax: 2,
-      idBadgeMax: 2,
-      allowedIdBadges: [
-        'drillSgt',
-        'instructor',
-        'masterGunner',
-        'recruiter',
-        'armyStaff',
-        'jcsStaff',
-      ],
-      group1Max: 1,
-      group2Max: 1,
-      group3Max: 1,
-    },
-    items: agsuItems,
-  },
-  classB: {
-    title: "Class B's",
-    allowsWatch: false,
-    limits: { ribbonMax: 6, skillBadgeMax: 1, skillTabMax: 1 },
-    items: classBItems,
-  },
-  classBShort: {
-    title: "Class B's (Short Sleeve)",
-    allowsWatch: true,
-    limits: { ribbonMax: 6, skillBadgeMax: 1, skillTabMax: 1 },
-    items: classBItems,
-  },
-  classC: {
-    title: "Class C's",
-    allowsWatch: false,
-    limits: {
-      skillTabMax: 1,
-      idBadgeMax: 2,
-      skillBadgeMax: 4,
-      group1Max: 1,
-      group2Max: 1,
-      group3Max: 1,
-    },
-    items: classCItems,
-  },
-  classCShort: {
-    title: "Class C's (Short Sleeve)",
-    allowsWatch: true,
-    limits: {
-      skillTabMax: 1,
-      idBadgeMax: 2,
-      skillBadgeMax: 4,
-      group1Max: 1,
-      group2Max: 1,
-      group3Max: 1,
-    },
-    items: classCItems,
-  },
-  tigerstripes: {
-    title: 'Tiger Stripes',
-    allowsWatch: false,
-    limits: { skillTabMax: 2, skillBadgeMax: 2 },
-    items: tigerItems,
-  },
-  tigerstripesShort: {
-    title: 'Tiger Stripes (Short Sleeve)',
-    allowsWatch: true,
-    limits: { skillTabMax: 2, skillBadgeMax: 2 },
-    items: tigerItems,
+    sections: rolledOcpSections,
   },
   acs: {
     title: 'ACS',
     allowsWatch: false,
     limits: { skillTabMax: 2, skillBadgeMax: 2 },
-    items: acsItems,
+    sections: acsSections,
   },
   acsShort: {
     title: 'ACS (Short Sleeve)',
     allowsWatch: true,
     limits: { skillTabMax: 2, skillBadgeMax: 2 },
-    items: acsItems,
+    sections: acsSections,
+  },
+  blackouts: {
+    title: 'Blackouts',
+    allowsWatch: false,
+    limits: { skillTabMax: 2, skillBadgeMax: 2 },
+    sections: blackoutsSections,
+  },
+  customPt: {
+    title: 'Custom PT',
+    allowsWatch: true,
+    limits: {},
+    sections: customPtSections,
+  },
+  fleece: {
+    title: 'Fleece (Winter)',
+    allowsWatch: false,
+    limits: {},
+    sections: fleeceSections,
+  },
+  tigerstripes: {
+    title: 'Tiger Stripes',
+    allowsWatch: false,
+    limits: { skillTabMax: 2, skillBadgeMax: 2 },
+    sections: tigerSections,
+  },
+  tigerstripesShort: {
+    title: 'Tiger Stripes (Short Sleeve)',
+    allowsWatch: true,
+    limits: { skillTabMax: 2, skillBadgeMax: 2 },
+    sections: tigerSections,
+  },
+  agsu: {
+    title: 'AGSU',
+    allowsWatch: false,
+    limits: {
+      group1to3Max: 1,
+      skillBadgeMax: 4,
+      skillTabMax: 2,
+      idBadgeMax: 2,
+      allowedIdBadges: [
+        'drillSgt',
+        'instructor',
+        'masterGunner',
+        'recruiter',
+        'armyStaff',
+        'jcsStaff',
+      ],
+    },
+    sections: agsuSections,
+  },
+  agsuShort: {
+    title: 'AGSU (Short Sleeve)',
+    allowsWatch: true,
+    limits: {
+      group1to3Max: 1,
+      skillBadgeMax: 4,
+      skillTabMax: 2,
+      idBadgeMax: 2,
+      allowedIdBadges: [
+        'drillSgt',
+        'instructor',
+        'masterGunner',
+        'recruiter',
+        'armyStaff',
+        'jcsStaff',
+      ],
+    },
+    sections: agsuSections,
+  },
+  classB: {
+    title: "Class B's",
+    allowsWatch: false,
+    limits: { ribbonMax: 6, skillBadgeMax: 1, skillTabMax: 1 },
+    sections: classBSections,
+  },
+  classBShort: {
+    title: "Class B's (Short Sleeve)",
+    allowsWatch: true,
+    limits: { ribbonMax: 6, skillBadgeMax: 1, skillTabMax: 1 },
+    sections: classBSections,
+  },
+  sweater: {
+    title: 'Sweater (Winter)',
+    allowsWatch: false,
+    limits: {},
+    sections: sweaterSections,
+  },
+  classC: {
+    title: "Class C's",
+    allowsWatch: false,
+    limits: {
+      group1to3Max: 1,
+      skillTabMax: 1,
+      idBadgeMax: 2,
+      skillBadgeMax: 4,
+    },
+    sections: classCSections,
+  },
+  classCShort: {
+    title: "Class C's (Short Sleeve)",
+    allowsWatch: true,
+    limits: {
+      group1to3Max: 1,
+      skillTabMax: 1,
+      idBadgeMax: 2,
+      skillBadgeMax: 4,
+    },
+    sections: classCSections,
   },
 }
 
@@ -473,6 +613,9 @@ export default {
     selectedTotal() {
       return this.selectedAwards.reduce((sum, a) => sum + a.price, 0)
     },
+    group1to3Count() {
+      return this.selectedAwards.filter((a) => a.type === 'group123').length
+    },
     skillBadgeCount() {
       return this.selectedAwards.filter((a) => a.type === 'skillBadge' && !a.ignoreLimit).length
     },
@@ -487,18 +630,6 @@ export default {
     },
     foreignCount() {
       return this.selectedAwards.filter((a) => a.type === 'foreign').length
-    },
-    group1Count() {
-      return this.selectedAwards.filter((a) => a.group === 'group1').length
-    },
-    group2Count() {
-      return this.selectedAwards.filter((a) => a.group === 'group2').length
-    },
-    group3Count() {
-      return this.selectedAwards.filter((a) => a.group === 'group3').length
-    },
-    groups1to3Count() {
-      return this.group1Count + this.group2Count + this.group3Count
     },
     totalPrice() {
       const uniformPrice = this.currentUniform?.price || 0
@@ -531,59 +662,47 @@ export default {
       if (this.selected.has(award.key)) return true
       const L = this.limits
 
+      if (
+        award.type === 'group123' &&
+        L.group1to3Max !== undefined &&
+        this.group1to3Count >= L.group1to3Max
+      ) {
+        alert(`Only ${L.group1to3Max} badge total from Groups 1‑3 allowed.`)
+        return false
+      }
       if (award.type === 'skillTab' && L.skillTabMax && this.skillTabCount >= L.skillTabMax) {
-        alert(`❌ Skill Tabs limited to ${L.skillTabMax}.`)
+        alert(`Skill Tabs limited to ${L.skillTabMax}.`)
         return false
       }
       if (award.type === 'ribbon' && L.ribbonMax && this.ribbonCount >= L.ribbonMax) {
-        alert(`❌ Ribbons limited to ${L.ribbonMax}.`)
+        alert(`Ribbons limited to ${L.ribbonMax}.`)
         return false
       }
       if (award.type === 'foreign' && L.foreignMax && this.foreignCount >= L.foreignMax) {
-        alert(`❌ Foreign awards limited to ${L.foreignMax}.`)
+        alert(`Foreign awards limited to ${L.foreignMax}.`)
         return false
       }
       if (award.type === 'idBadge' && L.idBadgeMax) {
         if (L.allowedIdBadges && !L.allowedIdBadges.includes(award.key)) {
-          alert(`❌ "${award.name}" not allowed.`)
+          alert(`"${award.name}" is not allowed on this uniform.`)
           return false
         }
         if (this.idBadgeCount >= L.idBadgeMax) {
-          alert(`❌ ID badges limited to ${L.idBadgeMax}.`)
+          alert(`ID badges limited to ${L.idBadgeMax}.`)
           return false
         }
       }
       if (
         award.type === 'skillBadge' &&
         !award.ignoreLimit &&
-        L.skillBadgeMax &&
+        L.skillBadgeMax !== undefined &&
         this.skillBadgeCount >= L.skillBadgeMax
       ) {
-        alert(`❌ Skill badges limited to ${L.skillBadgeMax}.`)
-        return false
-      }
-      if (award.group === 'group1' && L.group1Max && this.group1Count >= L.group1Max) {
-        alert(`❌ Only ${L.group1Max} from Group 1.`)
-        return false
-      }
-      if (award.group === 'group2' && L.group2Max && this.group2Count >= L.group2Max) {
-        alert(`❌ Only ${L.group2Max} from Group 2.`)
-        return false
-      }
-      if (award.group === 'group3' && L.group3Max && this.group3Count >= L.group3Max) {
-        alert(`❌ Only ${L.group3Max} from Group 3.`)
-        return false
-      }
-      if (
-        ['group1', 'group2', 'group3'].includes(award.group) &&
-        L.groups1to3Max &&
-        this.groups1to3Count >= L.groups1to3Max
-      ) {
-        alert(`❌ Only ${L.groups1to3Max} total from Groups 1‑3.`)
+        alert(`Skill badges limited to ${L.skillBadgeMax}.`)
         return false
       }
       if (L.prohibitedGroups && L.prohibitedGroups.includes(award.group)) {
-        alert(`❌ Group ${award.group} prohibited.`)
+        alert(`Badges from ${award.group} are prohibited on this uniform.`)
         return false
       }
       return true
@@ -608,6 +727,7 @@ export default {
 </script>
 
 <style scoped>
+/* ===== COMPLETE STYLES (unchanged from previous working version) ===== */
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
 
 * {
@@ -871,6 +991,17 @@ export default {
   margin-bottom: 4px;
 }
 
+.badge-group {
+  margin-bottom: 28px;
+}
+.badge-group-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: #ffd700;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
 .badge-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
