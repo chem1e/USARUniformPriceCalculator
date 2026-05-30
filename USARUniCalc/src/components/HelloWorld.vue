@@ -14,6 +14,7 @@
     </header>
 
     <main class="main">
+      <!-- Uniform Selection -->
       <section class="section">
         <div class="section-header">
           <span class="section-number">01</span>
@@ -42,6 +43,7 @@
         </div>
       </section>
 
+      <!-- Watch -->
       <section v-if="currentUniform && currentUniform.allowsWatch" class="section">
         <div class="section-header">
           <span class="section-number">02</span>
@@ -54,6 +56,7 @@
         </div>
       </section>
 
+      <!-- Awards Section -->
       <section v-if="currentUniform && currentUniform.sections" class="section">
         <div class="section-header">
           <span class="section-number">{{ currentUniform.allowsWatch ? '03' : '02' }}</span>
@@ -111,6 +114,77 @@
           <span>R${{ selectedTotal.toFixed(2) }}</span>
         </div>
       </section>
+
+      <!-- User Information Form -->
+      <section v-if="currentUniform" class="section form-section">
+        <div class="section-header">
+          <span class="section-number">{{ currentUniform.allowsWatch ? '04' : '03' }}</span>
+          <h2>Order Information</h2>
+        </div>
+        <div class="form-grid">
+          <div class="form-row">
+            <label>Name:</label>
+            <input type="text" v-model="userInfo.name" placeholder="Your name" class="form-input" />
+          </div>
+          <div class="form-row">
+            <label>Rank:</label>
+            <input type="text" v-model="userInfo.rank" placeholder="Rank" class="form-input" />
+          </div>
+          <div class="form-row">
+            <label>Type:</label>
+            <input
+              type="text"
+              v-model="userInfo.type"
+              placeholder="e.g., Enlisted / Officer"
+              class="form-input"
+            />
+          </div>
+          <div class="form-row">
+            <label>Gender:</label>
+            <select v-model="userInfo.gender" class="form-input">
+              <option value="">Select</option>
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Division/Brigade/Company:</label>
+            <input
+              type="text"
+              v-model="userInfo.division"
+              placeholder="e.g., 1st Infantry Division, HICOM (state previous company)"
+              class="form-input"
+            />
+          </div>
+          <div class="form-row">
+            <label>Nametape:</label>
+            <input
+              type="text"
+              v-model="userInfo.nametape"
+              placeholder="Your nametape text"
+              class="form-input"
+            />
+          </div>
+          <!-- Offset Checkbox – only for Class B, Class C, AGSU -->
+          <div class="form-row" v-if="isOffsetApplicableUniform">
+            <label>Offset (Yes/No):</label>
+            <label class="checkbox-label">
+              <input type="checkbox" v-model="offsetSelected" /> Yes
+            </label>
+          </div>
+          <div class="form-row">
+            <label>Price (R$):</label>
+            <input
+              type="text"
+              :value="totalPrice.toFixed(2)"
+              readonly
+              class="form-input readonly"
+            />
+          </div>
+        </div>
+        <button class="copy-btn" @click="copyTemplate">📋 Copy Order Template</button>
+      </section>
     </main>
 
     <footer class="summary-footer">
@@ -146,21 +220,21 @@ const uniformOptions = [
   { value: 'rolledOcp', label: 'Rolled OCP', price: 40 },
   { value: 'agsu', label: 'AGSU', price: 40 },
   { value: 'agsuShort', label: 'AGSU (Short Sleeve)', price: 40 },
-  { value: 'classB', label: "Class B's", price: 35 },
-  { value: 'classBShort', label: "Class B's (Short Sleeve)", price: 35 },
-  { value: 'classC', label: "Class C's", price: 30 },
-  { value: 'classCShort', label: "Class C's (Short Sleeve)", price: 30 },
-  { value: 'tigerstripes', label: 'Tiger Stripes', price: 50 },
-  { value: 'tigerstripesShort', label: 'Tiger Stripes (Short Sleeve)', price: 50 },
-  { value: 'acs', label: 'ACS', price: 45 },
-  { value: 'acsShort', label: 'ACS (Short Sleeve)', price: 45 },
-  { value: 'blackouts', label: 'Blackouts', price: 40 },
-  { value: 'customPt', label: 'Custom PT', price: 25 },
-  { value: 'fleece', label: 'Fleece (Winter)', price: 60 },
-  { value: 'sweater', label: 'Sweater (Winter)', price: 50 },
+  { value: 'classB', label: "Class B's", price: 40 },
+  { value: 'classBShort', label: "Class B's (Short Sleeve)", price: 40 },
+  { value: 'classC', label: "Class C's", price: 40 },
+  { value: 'classCShort', label: "Class C's (Short Sleeve)", price: 40 },
+  { value: 'tigerstripes', label: 'Tiger Stripes', price: 40 },
+  { value: 'tigerstripesShort', label: 'Tiger Stripes (Short Sleeve)', price: 40 },
+  { value: 'acs', label: 'ACS', price: 30 },
+  { value: 'acsShort', label: 'ACS (Short Sleeve)', price: 30 },
+  { value: 'blackouts', label: 'Blackouts', price: 30 },
+  { value: 'customPt', label: 'Custom PT', price: 30 },
+  { value: 'fleece', label: 'Fleece (Winter)', price: 30 },
+  { value: 'sweater', label: 'Sweater (Winter)', price: 30 },
 ]
 
-// Basic items (nametape removed)
+// Basic items
 const csib = {
   key: 'csib',
   name: 'Combat Service Identification Badge (CSIB)',
@@ -175,7 +249,6 @@ const unitCitation = { key: 'unitCitation', name: 'Unit Citation', price: 3 }
 const shoulderRank = { key: 'shoulderRank', name: 'Shoulderloop Rank Tab', price: 3 }
 
 // --- Award groups ---
-// Groups 1-3 (combined limit of 1)
 const combatBadges = {
   title: 'Combat Badges (Group 1)',
   items: [
@@ -236,7 +309,6 @@ const aviationBadges = {
   ],
 }
 
-// Group 4 – count as ordinary skill badges
 const airBadges = {
   title: 'Air & Special Operations Badges (Group 4)',
   items: [
@@ -254,7 +326,6 @@ const airBadges = {
   ],
 }
 
-// Identification badges – NOT skill badges
 const idBadgesGroup = {
   title: 'Identification Badges (Group 5)',
   items: [
@@ -327,28 +398,64 @@ const foreignGroup = {
   ],
 }
 
+const ribbons = [
+  { key: 'dsc', name: 'Army Distinguished Service Cross', price: 3, type: 'ribbon' },
+  { key: 'dds', name: 'Defense Distinguished Service', price: 3, type: 'ribbon' },
+  { key: 'ads', name: 'Army Distinguished Service', price: 3, type: 'ribbon' },
+  { key: 'silverStar', name: 'Silver Star', price: 3, type: 'ribbon' },
+  { key: 'dss', name: 'Defense Superior Service', price: 3, type: 'ribbon' },
+  { key: 'lom', name: 'Legion of Merit', price: 3, type: 'ribbon' },
+  { key: 'dfc', name: 'Distinguished Flying Cross', price: 3, type: 'ribbon' },
+  { key: 'soldiersMedal', name: 'Soldiers Medal', price: 3, type: 'ribbon' },
+  { key: 'bronzeStar', name: 'Bronze Star', price: 3, type: 'ribbon' },
+  { key: 'dms', name: 'Defense Meritorious Service', price: 3, type: 'ribbon' },
+  { key: 'msm', name: 'Meritorious Service', price: 3, type: 'ribbon' },
+  { key: 'airMedal', name: 'Air Medal', price: 3, type: 'ribbon' },
+  { key: 'jsc', name: 'Joint Service Commendation', price: 3, type: 'ribbon' },
+  { key: 'arcom', name: 'Army Commendation', price: 3, type: 'ribbon' },
+  { key: 'jsa', name: 'Joint Service Achievement', price: 3, type: 'ribbon' },
+  { key: 'aam', name: 'Army Achievement', price: 3, type: 'ribbon' },
+  { key: 'pscm', name: 'Public Service Commendation Medal', price: 3, type: 'ribbon' },
+  { key: 'wargames', name: 'Wargames Medal', price: 3, type: 'ribbon' },
+  { key: 'goodConduct', name: 'Army Good Conduct', price: 3, type: 'ribbon' },
+  { key: 'occupation', name: 'Army of Occupation Medal', price: 3, type: 'ribbon' },
+  { key: 'volunteer', name: 'Outstanding Volunteer', price: 3, type: 'ribbon' },
+  { key: 'ndsm', name: 'National Defense Service', price: 0, type: 'ribbon' },
+  { key: 'gwotService', name: 'Global War on Terrorism Service', price: 0, type: 'ribbon' },
+  { key: 'npd', name: 'NCO Professional Development', price: 3, type: 'ribbon' },
+  { key: 'armyService', name: 'Army Service', price: 0, type: 'ribbon' },
+  { key: 'militaryJustice', name: 'Military Justice', price: 3, type: 'ribbon' },
+  { key: 'recruiting', name: 'Army Recruiting Ribbon', price: 3, type: 'ribbon' },
+  { key: 'unMedal', name: 'United Nations Medal', price: 3, type: 'ribbon' },
+  { key: 'antarctica', name: 'Antarctica Service', price: 3, type: 'ribbon' },
+  { key: 'afem', name: 'Armed Forces Expeditionary Medal', price: 3, type: 'ribbon' },
+  { key: 'swasm', name: 'Southwest Asia Service', price: 3, type: 'ribbon' },
+  { key: 'kosovo', name: 'Kosovo Campaign', price: 3, type: 'ribbon' },
+  { key: 'kuwait', name: 'Kuwait Liberation Medal', price: 3, type: 'ribbon' },
+  { key: 'afghanistan', name: 'Afghanistan Campaign', price: 3, type: 'ribbon' },
+  { key: 'iraq', name: 'Iraq Campaign', price: 3, type: 'ribbon' },
+  { key: 'jsoc', name: 'Joint Special Operations Campaign', price: 3, type: 'ribbon' },
+  { key: 'gwotExped', name: 'Global War on Terrorism Expeditionary', price: 3, type: 'ribbon' },
+  { key: 'afsm', name: 'Armed Forces Service Medal', price: 3, type: 'ribbon' },
+  { key: 'seaDuty', name: 'Army Sea Duty', price: 3, type: 'ribbon' },
+  { key: 'overseas', name: 'Army Overseas Service', price: 3, type: 'ribbon' },
+  { key: 'natoNon5', name: 'NATO Non-Article 5', price: 3, type: 'ribbon' },
+  { key: 'nato5', name: 'NATO Article 5', price: 3, type: 'ribbon' },
+]
+
 const ribbonsGroup = {
   title: 'Ribbons',
-  items: [
-    { key: 'dsc', name: 'Army Distinguished Service Cross', price: 3, type: 'ribbon' },
-    { key: 'silverStar', name: 'Silver Star', price: 3, type: 'ribbon' },
-    { key: 'ndsm', name: 'National Defense Service Medal', price: 0, type: 'ribbon' },
-  ],
+  items: ribbons,
 }
 
-// --- Uniform sections (nametape removed everywhere) ---
+// --- Uniform sections ---
 const ocpSections = [
   { title: 'Uniform Items', items: [csib] },
   combatBadges,
   expertBadges,
   aviationBadges,
   airBadges,
-  {
-    title: 'Identification Badges (Limited to 2, specific types)',
-    items: idBadgesGroup.items.filter((b) =>
-      ['drillSgt', 'instructor', 'recruiter', 'masterGunner'].includes(b.key),
-    ),
-  },
+  { title: 'Identification Badges (Group 5)', items: idBadgesGroup.items },
   skillTabsGroup,
   { title: 'Foreign Devices (Max 1)', items: foreignGroup.items },
 ]
@@ -359,12 +466,7 @@ const rolledOcpSections = [
   expertBadges,
   aviationBadges,
   airBadges,
-  {
-    title: 'Identification Badges (Limited to 2, specific types)',
-    items: idBadgesGroup.items.filter((b) =>
-      ['drillSgt', 'instructor', 'recruiter', 'masterGunner'].includes(b.key),
-    ),
-  },
+  { title: 'Identification Badges (Group 5)', items: idBadgesGroup.items },
   skillTabsGroup,
   { title: 'Foreign Devices (Max 1)', items: foreignGroup.items },
 ]
@@ -373,17 +475,14 @@ const acsSections = [{ title: 'Uniform Items', items: [csib] }, skillTabsGroup]
 
 const blackoutsSections = [{ title: 'Uniform Items', items: [csib] }, skillTabsGroup]
 
-const customPtSections = [
-  { title: 'Uniform Items', items: [] }, // no items
-]
+const customPtSections = [{ title: 'Uniform Items', items: [] }]
 
-const fleeceSections = [
-  { title: 'Uniform Items', items: [] }, // no items
-]
+const fleeceSections = [{ title: 'Uniform Items', items: [] }]
 
 const tigerSections = [
   { title: 'Uniform Items', items: [] },
   combatBadges,
+  { title: 'Ribbons', items: ribbons },
   {
     title: 'Skill Tabs (Max 2)',
     items: skillTabsGroup.items.filter(
@@ -409,7 +508,7 @@ const agsuSections = [
 
 const classBSections = [
   { title: 'Regimental Distinctive Insignia', items: [rdi] },
-  { title: 'Ribbons (Max 6)', items: ribbonsGroup.items },
+  { title: 'Ribbons (Max 6)', items: ribbons },
   {
     title: 'Skill Badges & Tabs (Metal Replica, Max 1 total)',
     items: [
@@ -449,7 +548,6 @@ const uniformAwards = {
       foreignMax: 1,
       idBadgeMax: 2,
       allowedIdBadges: ['drillSgt', 'instructor', 'recruiter', 'masterGunner'],
-      prohibitedGroups: ['group5'],
     },
     sections: ocpSections,
   },
@@ -463,7 +561,6 @@ const uniformAwards = {
       foreignMax: 1,
       idBadgeMax: 2,
       allowedIdBadges: ['drillSgt', 'instructor', 'recruiter', 'masterGunner'],
-      prohibitedGroups: ['group5'],
     },
     sections: rolledOcpSections,
   },
@@ -598,6 +695,15 @@ export default {
       currentUniform: null,
       selected: new Map(),
       watch: false,
+      offsetSelected: false,
+      userInfo: {
+        name: '',
+        rank: '',
+        type: '',
+        gender: '',
+        division: '',
+        nametape: '',
+      },
     }
   },
   computed: {
@@ -631,10 +737,30 @@ export default {
     foreignCount() {
       return this.selectedAwards.filter((a) => a.type === 'foreign').length
     },
+    isOffsetApplicableUniform() {
+      const key = this.selectedKey
+      return (
+        key === 'classB' ||
+        key === 'classBShort' ||
+        key === 'classC' ||
+        key === 'classCShort' ||
+        key === 'agsu' ||
+        key === 'agsuShort'
+      )
+    },
     totalPrice() {
       const uniformPrice = this.currentUniform?.price || 0
       const watchPrice = this.watch && this.currentUniform?.allowsWatch ? 3 : 0
-      return uniformPrice + watchPrice + this.selectedTotal
+      const offsetPrice = this.offsetSelected && this.isOffsetApplicableUniform ? 3 : 0
+      return uniformPrice + watchPrice + this.selectedTotal + offsetPrice
+    },
+    selectedBadges() {
+      return this.selectedAwards.filter(
+        (a) => ['group123', 'skillBadge', 'idBadge'].includes(a.type) || a.group === 'group5',
+      )
+    },
+    selectedRibbons() {
+      return this.selectedAwards.filter((a) => a.type === 'ribbon')
     },
   },
   methods: {
@@ -645,6 +771,7 @@ export default {
         this.currentUniform = { ...conf, price: opt.price, label: opt.label }
         this.selected.clear()
         this.watch = false
+        this.offsetSelected = false // reset offset when uniform changes
       } else {
         this.currentUniform = null
       }
@@ -654,6 +781,7 @@ export default {
       this.currentUniform = null
       this.selected.clear()
       this.watch = false
+      this.offsetSelected = false
     },
     isSelected(award) {
       return this.selected.has(award.key)
@@ -721,13 +849,49 @@ export default {
       this.currentUniform = null
       this.selected.clear()
       this.watch = false
+      this.offsetSelected = false
+      this.userInfo = {
+        name: '',
+        rank: '',
+        type: '',
+        gender: '',
+        division: '',
+        nametape: '',
+      }
+    },
+    copyTemplate() {
+      const badgeLines = this.selectedBadges.map((b) => `- ${b.name}`).join('\n')
+      const ribbonLines = this.selectedRibbons.map((r) => `- ${r.name}`).join('\n')
+      const offsetText = this.offsetSelected ? 'Yes' : 'No'
+      const template = `**Name:** ${this.userInfo.name || 'N/A'}
+**Rank:** ${this.userInfo.rank || 'N/A'}
+**Type:** ${this.userInfo.type || 'N/A'}
+**Gender:** ${this.userInfo.gender || 'N/A'}
+**Badges:**
+${badgeLines || 'None'}
+**Ribbons:**
+${ribbonLines || 'None'}
+**Current Division/Brigade/Company:** ${this.userInfo.division || 'N/A'}
+**Nametape:** ${this.userInfo.nametape || 'N/A'}
+**Offset:** ${offsetText}
+**Price:** R$${this.totalPrice.toFixed(2)}
+**Discount Note:** N/A
+**Robux Proof Sent to:** N/A`
+      navigator.clipboard
+        .writeText(template)
+        .then(() => {
+          alert('Order template copied to clipboard!')
+        })
+        .catch(() => {
+          alert('Failed to copy. Please copy manually.')
+        })
     },
   },
 }
 </script>
 
 <style scoped>
-/* ===== COMPLETE STYLES (unchanged from previous working version) ===== */
+/* Styles remain the same as before – no changes needed */
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
 
 * {
@@ -1079,6 +1243,78 @@ export default {
   color: #ffd700;
 }
 
+/* Form Styles */
+.form-section {
+  margin-top: 48px;
+}
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: #111111;
+  border: 1px solid #333333;
+  border-radius: 6px;
+  padding: 20px;
+}
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.form-row label {
+  width: 220px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #ffd700;
+}
+.form-input {
+  flex: 1;
+  background: #1a1a1a;
+  border: 1px solid #333333;
+  border-radius: 4px;
+  padding: 8px 12px;
+  color: #ffffff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+}
+.form-input:focus {
+  outline: none;
+  border-color: #ffd700;
+}
+.form-input.readonly {
+  background: #2a2a2a;
+  color: #aaaaaa;
+  cursor: not-allowed;
+}
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.checkbox-label input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+.copy-btn {
+  margin-top: 20px;
+  width: 100%;
+  padding: 12px;
+  background: #ffd700;
+  border: none;
+  border-radius: 4px;
+  color: #000000;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.copy-btn:hover {
+  opacity: 0.8;
+}
+
 .summary-footer {
   position: fixed;
   bottom: 0;
@@ -1166,6 +1402,13 @@ export default {
   }
   .uniform-select {
     min-width: 150px;
+  }
+  .form-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .form-row label {
+    width: auto;
   }
 }
 </style>
